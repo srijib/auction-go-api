@@ -70,7 +70,7 @@ func getOffer(service offer.UseCase) http.Handler {
 			return
 		}
 		w.WriteHeader(http.StatusAccepted)
-		if err := json.NewEncoder(w).Encode(offer); err != nil {
+		if err := json.NewEncoder(w).Encode(offers); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(errorMessage))
 			return
