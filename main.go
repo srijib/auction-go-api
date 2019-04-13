@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/context"
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
-	"github.com/urmilagera/auction/api/config"
-	"github.com/urmilagera/auction/api/handler"
-	"github.com/urmilagera/auction/api/infrastructure/mongo_db"
-	"github.com/urmilagera/auction/api/middleware"
-	"github.com/urmilagera/auction/pkg/bid"
-	"github.com/urmilagera/auction/pkg/offer"
+	"github.com/urmilagera/auction-go-api/api/config"
+	"github.com/urmilagera/auction-go-api/api/handler"
+	"github.com/urmilagera/auction-go-api/api/infrastructure/mongo_db"
+	"github.com/urmilagera/auction-go-api/api/middleware"
+	"github.com/urmilagera/auction-go-api/pkg/bid"
+	"github.com/urmilagera/auction-go-api/pkg/offer"
 
-	"gopkg.in/negroni"
+	"github.com/urfave/negroni"
 )
 
 func main() {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/mgosession"
+	"github.com/juju/mgosession"
 	mgo "gopkg.in/mgo.v2"
 )
 

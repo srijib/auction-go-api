@@ -1,4 +1,4 @@
-package user
+package client
 
 import e "github.com/urmilagera/auction/pkg/entity_objects"
 

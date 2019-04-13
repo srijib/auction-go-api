@@ -5,9 +5,9 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/urfave/negroni"
 	user "github.com/urmilagera/auction/pkg/client"
 	e "github.com/urmilagera/auction/pkg/entity_objects"
-	"gopkg.in/negroni"
 )
 
 func signup(service user.UseCase) http.Handler {

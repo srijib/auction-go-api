@@ -4,6 +4,7 @@ import (
 	e "github.com/urmilagera/auction/pkg/entity_objects"
 )
 
+//Repository repository interface
 type Repository interface {
 	Find(id e.ID) (*e.Offer, error)
 	Save(offer *e.Offer) (e.ID, error)
@@ -12,6 +13,7 @@ type Repository interface {
 	Update(id e.ID, key string, val interface{}) (*e.Offer, error)
 }
 
+//UseCase for offer
 type UseCase interface {
 	Find(id e.ID) (*e.Offer, error)
 	Save(user *e.Offer) (e.ID, error)

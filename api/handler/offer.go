@@ -6,9 +6,9 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/urfave/negroni"
 	e "github.com/urmilagera/auction/pkg/entity_objects"
 	"github.com/urmilagera/auction/pkg/offer"
-	"gopkg.in/negroni"
 )
 
 func createOffer(service offer.UseCase) http.Handler {

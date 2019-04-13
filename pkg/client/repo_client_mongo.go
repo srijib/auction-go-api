@@ -1,7 +1,7 @@
-package user
+package client
 
 import (
-	"github.com/mgosession"
+	"github.com/juju/mgosession"
 	e "github.com/urmilagera/auction/pkg/entity_objects"
 	mgo "gopkg.in/mgo.v2"
 	bson "gopkg.in/mgo.v2/bson"
