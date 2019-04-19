@@ -5,14 +5,14 @@ import (
 )
 
 type Offer struct {
-	Id        ID        `json:"id" bson:"_id,omitempty"`
-	BidPrice  float64   `json:"bid_price"`
-	GoLive    time.Time `json:"go_live"`
-	Lifetime  int64     `json:"lifetime"`
-	PhotoURL  string    `json:"photo_url"`
-	Title     string    `json:"title"`
-	CreatedBy string    `json:"created_by"`
-	Sold      bool      `json:"sold"`
+	Id        int `gorm:"primary_key";"AUTO_INCREMENT"`
+	BidPrice  float64
+	GoLive    time.Time
+	Lifetime  int64
+	PhotoURL  string
+	Title     string
+	CreatedBy string
+	Sold      bool
 }
 
 func (offer *Offer) Validate() bool {

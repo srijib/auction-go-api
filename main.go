@@ -2,46 +2,62 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
+	"github.com/jinzhu/gorm"
+	"github.com/urfave/negroni"
 	"github.com/urmilagera/auction/api/config"
 	"github.com/urmilagera/auction/api/handler"
-	"github.com/urmilagera/auction/api/infrastructure/mongo_db"
 	"github.com/urmilagera/auction/api/middleware"
 	"github.com/urmilagera/auction/pkg/bid"
+	"github.com/urmilagera/auction/pkg/client"
+	e "github.com/urmilagera/auction/pkg/entity_objects"
 	"github.com/urmilagera/auction/pkg/offer"
-
-	"github.com/urfave/negroni"
 )
 
 func main() {
-	config := config.GetDBConfig()
+	config := config.GetAppConfig()
+	var DB *gorm.DB
 
-	mPool, session := mongo_db.GetMongoPool(
-		config.GetDatabaseHostname(),
-		config.GetDatabasePort(),
-		config.GetConnectionPool(),
-	)
+	dbURI := fmt.Sprintf("%s:%s@/%s?charset=%s&parseTime=True",
+		config.GetDatabaseUsername(),
+		config.GetDatabasePassword(),
+		config.GetDatabaseName(),
+		config.GetDatabaseCharset())
 
-	defer session.Close()
-	defer mPool.Close()
+	db, err := gorm.Open(config.GetDatabaseDialect(), dbURI)
+	if err != nil {
+		log.Fatal("Could not connect database")
+	}
+	DB = e.DBMigrate(db)
 
-	fmt.Println("Hello")
 	r := mux.NewRouter()
 
-	offerRepo := offer.CreateMongoRepository(mPool, config.GetDatabaseName())
-	bidRepo := bid.CreateMongoRepository(mPool, config.GetDatabaseName())
+	clientRepo := client.CreateMysqlRepository(DB)
+	offerRepo := offer.CreateMysqlRepository(DB)
+	bidRepo := bid.CreateMysqlRepository(DB)
 
+	clientService := client.CreateService(clientRepo)
 	offerService := offer.CreateService(offerRepo)
 	bidService := bid.CreateService(bidRepo)
 
-	apiMiddleware := negroni.New(
+	authMiddleware := negroni.New(
 		negroni.HandlerFunc(middleware.Cors),
 		negroni.NewLogger(),
 	)
 
+	//Middleware for all other routes that require authentication
+	apiMiddleware := negroni.New(
+		negroni.HandlerFunc(middleware.Cors),
+		negroni.HandlerFunc(middleware.JwtMiddleware(config.GetAppSecret())),
+		negroni.HandlerFunc(middleware.LoginMiddleware(clientService)),
+		negroni.NewLogger(),
+	)
+	handler.CreateClientHandlers(r, *authMiddleware, clientService)
 	handler.CreateOfferHandlers(r, *apiMiddleware, offerService)
 	handler.CreateBidHandlers(r, *apiMiddleware, bidService, offerService)
 
@@ -50,13 +66,8 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 	})
 
-	server := &http.Server{
-		Addr:    ":" + config.GetAppServerPort(),
-		Handler: context.ClearHandler(http.DefaultServeMux),
+	error := http.ListenAndServe(":8040", context.ClearHandler(http.DefaultServeMux))
+	if error != nil {
+		fmt.Println(error.Error())
 	}
-	err := server.ListenAndServe()
-	if err != nil {
-		fmt.Println(err.Error())
-	}
-	fmt.Println("Server is UP!!!!")
 }

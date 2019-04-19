@@ -17,13 +17,12 @@ func CreateService(r Repository) *Service {
 }
 
 //Save
-func (s *Service) Save(client *e.Client) (e.ID, error) {
-	client.Id = e.NewID()
+func (s *Service) Save(client *e.Client) (*e.Client, error) {
 	return s.repo.Save(client)
 }
 
 //Find
-func (s *Service) Find(id e.ID) (*e.Client, error) {
+func (s *Service) Find(id int) (*e.Client, error) {
 	return s.repo.Find(id)
 }
 

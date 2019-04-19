@@ -2,21 +2,30 @@ package entity_objects
 
 import (
 	"time"
+
+	"github.com/jinzhu/gorm"
 )
 
 type Bid struct {
-	Id        ID        `json:"id" bson:"_id,omitempty"`
-	BidPrice  float64   `json:"bid_price"`
-	Username  string    `json:"username"`
-	OfferID   ID        `json:"offer_id"`
-	Timestamp time.Time `json:"timestamp"`
-	Accepted  bool      `json:"accepted"`
+	Id        int `gorm:"primary_key";"AUTO_INCREMENT"`
+	BidPrice  float64
+	OfferId   int
+	Client    Client `gorm:"foreignkey:ClientId"`
+	Timestamp time.Time
+	Accepted  bool
+	ClientId  int
 }
 
 func (bid *Bid) Validate() bool {
-	if bid.BidPrice <= 0 || bid.OfferID == "" {
+	if bid.BidPrice <= 0 {
 		return false
 	}
 	bid.Timestamp = time.Now()
 	return true
+}
+func DBMigrate(db *gorm.DB) *gorm.DB {
+	db.AutoMigrate(&Bid{})
+	db.AutoMigrate(&Offer{})
+	db.AutoMigrate(&Client{})
+	return db
 }

@@ -2,11 +2,12 @@ package handler
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 	"github.com/urmilagera/auction/pkg/bid"
-	e "github.com/urmilagera/auction/pkg/entity_objects"
+	"github.com/urmilagera/auction/pkg/entity_objects"
 	"github.com/urmilagera/auction/pkg/offer"
 
 	"net/http"
@@ -14,17 +15,17 @@ import (
 
 func placeBid(bidService bid.UseCase, offerService offer.UseCase) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		var _bid *e.Bid
+		var _bid *entity_objects.Bid
 		errorMessage := "Error occured while Placing a Bid"
-		client := r.Context().Value("me").(*e.Client)
+
 		err := json.NewDecoder(r.Body).Decode(&_bid)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Error occured while Placing a Bid"))
 			return
 		}
-
-		offer, err := offerService.Find(_bid.OfferID)
+		client := _bid.Client
+		offer, err := offerService.Find(_bid.OfferId)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Error occured while Placing a Bid"))
@@ -37,15 +38,17 @@ func placeBid(bidService bid.UseCase, offerService offer.UseCase) http.Handler {
 			return
 		}
 
-		offer, err = offerService.Update(_bid.OfferID, "bidprice", _bid.BidPrice)
+		_bid.ClientId = client.Id
+		_bid, err = bidService.Save(_bid)
+
+		offer, err = offerService.Update(_bid.OfferId, "bid_id", _bid.Id)
+
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Error occured in Placing a Bid"))
 			return
 		}
 
-		_bid.Username = client.Username
-		_bid.Id, err = bidService.Save(_bid)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Error occured in Placing a Bid"))
@@ -61,13 +64,17 @@ func placeBid(bidService bid.UseCase, offerService offer.UseCase) http.Handler {
 		w.WriteHeader(http.StatusCreated)
 
 	})
+
 }
 
 func acceptBid(bidService bid.UseCase, offerService offer.UseCase) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id := vars["id"]
-		bidID := e.StringToID(id)
+		bidID, err := strconv.Atoi(id)
+		if err != nil {
+			panic(err)
+		}
 		errorMessage := "Error Accepting Bid"
 
 		_bid, err := bidService.Update(bidID, "accepted", true)
@@ -77,7 +84,7 @@ func acceptBid(bidService bid.UseCase, offerService offer.UseCase) http.Handler 
 			return
 		}
 
-		_, err = offerService.Update(_bid.OfferID, "sold", true)
+		_, err = offerService.Update(_bid.OfferId, "sold", true)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte("Error Placing Bid"))

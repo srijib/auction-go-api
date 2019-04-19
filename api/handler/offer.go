@@ -18,23 +18,20 @@ func createOffer(service offer.UseCase) http.Handler {
 		errorMessage := "Error occured while creating an offer"
 		err := json.NewDecoder(r.Body).Decode(&offer)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(errorMessage))
+			respondError(w, http.StatusInternalServerError, errorMessage)
 			return
 		}
 
 		// check if offer data is valid else return error
 		if !offer.Validate() {
-			w.WriteHeader(http.StatusBadRequest)
-			w.Write([]byte("Bad Data error"))
+			respondError(w, http.StatusBadRequest, "Bad Data error")
 			return
 		}
 		offer.CreatedBy = client.Username
-		offer.Id, err = service.Save(offer)
+		offer, err = service.Save(offer)
 
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			w.Write([]byte(errorMessage))
+			respondError(w, http.StatusBadRequest, "Bad Data error")
 			return
 		}
 
@@ -78,6 +75,25 @@ func getOffer(service offer.UseCase) http.Handler {
 	})
 }
 
+func getSoldOffers(service offer.UseCase) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		errorMessage := "Error occured while fetching offers"
+		var offers []*e.Offer
+		offers, err := service.SoldOffers()
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(errorMessage))
+			return
+		}
+		w.WriteHeader(http.StatusAccepted)
+		if err := json.NewEncoder(w).Encode(offers); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(errorMessage))
+			return
+		}
+	})
+}
+
 //CreateUserHandlers Maps routes to http handlers
 func CreateOfferHandlers(r *mux.Router, n negroni.Negroni, service offer.UseCase) {
 	r.Handle("/offer", n.With(
@@ -86,5 +102,9 @@ func CreateOfferHandlers(r *mux.Router, n negroni.Negroni, service offer.UseCase
 
 	r.Handle("/offer", n.With(
 		negroni.Wrap(getOffer(service)),
+	)).Methods("GET", "OPTIONS").Name("GetOffers")
+
+	r.Handle("/sold", n.With(
+		negroni.Wrap(getSoldOffers(service)),
 	)).Methods("GET", "OPTIONS").Name("GetOffers")
 }
