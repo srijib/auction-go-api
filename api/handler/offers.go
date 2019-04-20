@@ -7,6 +7,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
+	"github.com/urmilagera/auction/pkg/bid"
 	e "github.com/urmilagera/auction/pkg/entity_objects"
 	"github.com/urmilagera/auction/pkg/offer"
 )
@@ -74,8 +75,7 @@ func getOffer(service offer.UseCase) http.Handler {
 		}
 	})
 }
-
-func getSoldOffers(service offer.UseCase) http.Handler {
+func getSoldOffers(service offer.UseCase, bidService bid.UseCase) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		errorMessage := "Error occured while fetching offers"
 		var offers []*e.Offer
@@ -85,6 +85,18 @@ func getSoldOffers(service offer.UseCase) http.Handler {
 			w.Write([]byte(errorMessage))
 			return
 		}
+
+		for _, element := range offers {
+			bid, err := bidService.Find(element.BidId)
+			if err != nil {
+				w.WriteHeader(http.StatusInternalServerError)
+				w.Write([]byte("Authentication Failed"))
+				return
+			}
+
+			element.Bid = bid
+		}
+
 		w.WriteHeader(http.StatusAccepted)
 		if err := json.NewEncoder(w).Encode(offers); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -95,7 +107,7 @@ func getSoldOffers(service offer.UseCase) http.Handler {
 }
 
 //CreateUserHandlers Maps routes to http handlers
-func CreateOfferHandlers(r *mux.Router, n negroni.Negroni, service offer.UseCase) {
+func CreateOfferHandlers(r *mux.Router, n negroni.Negroni, service offer.UseCase, bidService bid.UseCase) {
 	r.Handle("/offer", n.With(
 		negroni.Wrap(createOffer(service)),
 	)).Methods("POST", "OPTIONS").Name("CreateOffer")
@@ -105,6 +117,6 @@ func CreateOfferHandlers(r *mux.Router, n negroni.Negroni, service offer.UseCase
 	)).Methods("GET", "OPTIONS").Name("GetOffers")
 
 	r.Handle("/sold", n.With(
-		negroni.Wrap(getSoldOffers(service)),
+		negroni.Wrap(getSoldOffers(service, bidService)),
 	)).Methods("GET", "OPTIONS").Name("GetOffers")
 }

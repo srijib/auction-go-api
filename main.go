@@ -58,8 +58,8 @@ func main() {
 		negroni.NewLogger(),
 	)
 	handler.CreateClientHandlers(r, *authMiddleware, clientService)
-	handler.CreateOfferHandlers(r, *apiMiddleware, offerService)
-	handler.CreateBidHandlers(r, *apiMiddleware, bidService, offerService)
+	handler.CreateOfferHandlers(r, *apiMiddleware, offerService, bidService)
+	handler.CreateBidHandlers(r, *apiMiddleware, bidService, offerService, clientService)
 
 	http.Handle("/", r)
 	r.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {

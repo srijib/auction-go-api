@@ -1,10 +1,10 @@
 package middleware
 
 import (
-	"net/http"
-	"time"
-
 	"context"
+	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/urmilagera/auction/pkg/client"
 
@@ -19,11 +19,14 @@ func LoginMiddleware(clientService client.UseCase) negroni.HandlerFunc {
 	return negroni.HandlerFunc(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 
 		//Get and Parse Token data
-		jwtToken := r.Context().Value("client").(*jwt.Token)
+		jwtToken := r.Context().Value("user").(*jwt.Token)
+		//jwtToken := r.Context().Value("user").(*jwt.Token)
 		created := jwtToken.Claims.(jwt.MapClaims)["created"].(float64)
-		_id := jwtToken.Claims.(jwt.MapClaims)["clientId"].(int)
-		clientId := _id
-
+		_id := jwtToken.Claims.(jwt.MapClaims)["clientId"].(string)
+		clientId, err := strconv.Atoi(_id)
+		if err != nil {
+			panic(err)
+		}
 		//Check if token is expired or not
 		delta := time.Now().Unix() - int64(created)
 		if delta > 3600 {

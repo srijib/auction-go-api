@@ -19,12 +19,12 @@ func (r *MysqlRepository) Find(id int) (*e.Client, error) {
 	client := e.Client{Id: id}
 	err := r.DB.Find(&client)
 
-	if err.RecordNotFound() {
-		return nil, e.ErrNotFound
+	if err.RowsAffected == 0 {
+		return nil, nil
 	} else if err == nil {
 		return &client, nil
 	} else {
-		return nil, err.Error
+		return &client, nil
 	}
 }
 

@@ -18,12 +18,12 @@ func CreateMysqlRepository(r *gorm.DB) *MysqlRepository {
 func (r *MysqlRepository) Find(id int) (*e.Offer, error) {
 	result := e.Offer{Id: id}
 	err := r.DB.Find(&result)
-	if err.RecordNotFound() {
-		return nil, e.ErrNotFound
-	} else if err.Error == nil {
+	if err.RowsAffected == 0 {
+		return nil, nil
+	} else if err == nil {
 		return &result, nil
 	} else {
-		return nil, err.Error
+		return &result, nil
 	}
 }
 

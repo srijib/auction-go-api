@@ -19,21 +19,24 @@ func (r *MysqlRepository) Find(id int) (*e.Bid, error) {
 	bid := e.Bid{Id: id}
 	err := r.DB.Find(&bid)
 
-	if err.RecordNotFound() {
-		return nil, e.ErrNotFound
+	if err.RowsAffected == 0 {
+		return nil, nil
 	} else if err == nil {
 		return &bid, nil
 	} else {
-		return nil, err.Error
+		return &bid, nil
 	}
 }
 
 func (r *MysqlRepository) Save(b *e.Bid) (*e.Bid, error) {
 	err := r.DB.Save(&b)
-	if err != nil {
-		return nil, err.Error
+	if err.RowsAffected == 0 {
+		return nil, nil
+	} else if err == nil {
+		return b, nil
+	} else {
+		return b, nil
 	}
-	return b, nil
 }
 
 func (r *MysqlRepository) Update(id int, key string, val interface{}) (*e.Bid, error) {

@@ -5,14 +5,16 @@ import (
 )
 
 type Offer struct {
-	Id        int `gorm:"primary_key";"AUTO_INCREMENT"`
-	BidPrice  float64
-	GoLive    time.Time
-	Lifetime  int64
-	PhotoURL  string
-	Title     string
-	CreatedBy string
-	Sold      bool
+	Id        int       `gorm:"primary_key";"AUTO_INCREMENT"`
+	BidPrice  float64   `json:"bid_price"`
+	GoLive    time.Time `json:"go_live"`
+	Lifetime  int       `json:"life_time"`
+	PhotoUrl  string    `json:"photo_url"`
+	Title     string    `json:"title"`
+	Sold      bool      `json:"sold"`
+	CreatedBy string    `json:"created_by"`
+	BidId     int       `json:"bid_id"`
+	Bid       *Bid      `gorm:"foreignkey:OfferId"` //you need to do like this
 }
 
 func (offer *Offer) Validate() bool {
