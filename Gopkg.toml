@@ -34,4 +34,4 @@
   unused-packages = true
 
 [metadata.heroku]
-  root-package = "github.com/urmilagera/auction"
+  root-package = "github.com/srijib/auction"
